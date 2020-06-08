@@ -24,7 +24,10 @@
                 method: 'get',
                 success: function(data) {
                     _this.dataList = data;
-                    _this.loadMusic(_this.curIndex); // 加载音乐
+                    _this.listPlay(); // 列表切歌
+                    _this.indexObj = new player.controlIndex(data.length); // 创建一个索引实例
+
+                    _this.loadMusic(_this.indexObj.index); // 加载音乐
                     _this.musicControl(); // 添加音乐操作的功能
                 },
                 error: function(err) {
@@ -42,7 +45,9 @@
                 this.controlBtns[2].className = 'playing'; // 切换暂停图片
                 this.imgRotate(0);
             }
-            
+            // 切换列表中歌曲的选中状态
+            this.list.changeSelect(index);
+            this.curIndex = index; // 存储当前歌曲的索引值
         },
         musicControl: function() { // 控制音乐（播放、暂停、上/下一首）
             var _this = this;
@@ -62,12 +67,12 @@
             // 上一首
             this.controlBtns[1].addEventListener('touchend', function() {
                 player.music.status = 'play';
-                _this.loadMusic(--_this.curIndex);
+                _this.loadMusic(_this.indexObj.prev());
             })
             // 下一首
             this.controlBtns[3].addEventListener('touchend', function() {
                 player.music.status = 'play';
-                _this.loadMusic(++_this.curIndex);
+                _this.loadMusic(_this.indexObj.next());
             })
         },
         imgRotate: function(deg) { // 旋转图片
@@ -81,6 +86,26 @@
         },
         imgStop: function() { // 停止图片旋转
             clearInterval(this.rotateImgTimer);
+        },
+        listPlay: function() { // 列表切歌
+            var _this = this;
+            this.list = player.listControl(this.dataList, this.wrap);
+            // 为列表按钮添加点击事件
+            this.controlBtns[4].addEventListener('touchend', function() {
+                _this.list.slideUp(); // 列表显示
+            })
+            this.list.musicList.forEach(function(item, index) {
+                item.addEventListener('touchend', function() {
+                    // 如果点击的是当前这首歌，不管是处于播放还是暂停状态，不需要任何操作
+                    if (_this.curIndex === index) {
+                        return;
+                    }
+                    player.music.status = 'play';
+                    _this.indexObj.index = index; // 索引更新
+                    _this.loadMusic(index);
+                    _this.list.slideDown();
+                })
+            })
         }
     }
 
