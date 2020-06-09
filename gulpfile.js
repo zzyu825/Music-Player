@@ -37,7 +37,7 @@ function js() {
 }
 
 function image() {
-    return src(folder.src + 'images/*')
+    return src(folder.src + 'images/*.{png,jpg,jpeg,gif,ico}')
     // .pipe(imgMin())
     .pipe(tinypng({
         key: 'KxmD3GLXdtZbB0PcR5PFqtybHXny5hyd',

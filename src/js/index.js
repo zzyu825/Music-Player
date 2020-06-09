@@ -4,6 +4,8 @@
         this.dataList = []; // 存储请求到的数据
         this.curIndex = 0; // 当前歌曲的索引
         this.rotateImgTimer = null; // 旋转图片的计时器
+        this.progress = player.progress.pro;
+        this.drag = player.progress.drag;
     }
 
     MusicPlayer.prototype = {
@@ -29,6 +31,13 @@
 
                     _this.loadMusic(_this.indexObj.index); // 加载音乐
                     _this.musicControl(); // 添加音乐操作的功能
+                    _this.dragProgess();
+
+                    player.music.end(function() {
+                        _this.imgStop();
+                        _this.controlBtns[2].className = '';
+                        player.music.status = 'pause'
+                    })
                 },
                 error: function(err) {
                     console.log('数据请求失败：' + err)
@@ -39,11 +48,16 @@
             // console.log(this.dataList, index)
             player.render(this.dataList[index]); // 渲染歌曲图片和信息
             player.music.load(this.dataList[index].audioSrc);
+
+            this.progress.renderTotalTime(this.dataList[index].duration);
+
             // 播放音乐(只有状态为play才能播放)
             if (player.music.status === 'play') {
                 player.music.play();
                 this.controlBtns[2].className = 'playing'; // 切换暂停图片
                 this.imgRotate(0);
+
+                this.progress.move(0);
             }
             // 切换列表中歌曲的选中状态
             this.list.changeSelect(index);
@@ -57,11 +71,15 @@
                     player.music.pause(); // 暂停
                     this.className = ''; // 切换播放图片
                     _this.imgStop(); // 停止旋转
+
+                    _this.progress.stop();
                 } else {
                     player.music.play(); // 播放
                     this.className = 'playing'; // 切换暂停图片
                     var deg = _this.record.dataset.rotate || 0;
                     _this.imgRotate(deg); // 旋转图片
+
+                    _this.progress.move();
                 }
             });
             // 上一首
@@ -106,6 +124,29 @@
                     _this.list.slideDown();
                 })
             })
+        },
+        dragProgess: function() {
+            var _this = this;
+            this.drag.start = function() {
+                _this.progress.stop();
+            }
+            this.drag.move = function(per) {
+                _this.progress.update(per, true)
+            }
+            this.drag.end = function(per) {
+                // 更新歌曲当前播放的位置
+                var curTime = per * _this.dataList[_this.indexObj.index].duration;
+                player.music.playTo(curTime);
+                // 音乐继续播放
+                player.music.play();
+                // 时间条继续
+                _this.progress.move(per, false)
+                // 图片继续转
+                var deg = _this.record.dataset.rotate || 0;
+                _this.imgRotate(deg);
+
+                _this.controlBtns[2].className = 'playing';
+            }
         }
     }
 

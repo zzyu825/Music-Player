@@ -18,6 +18,14 @@
         pause: function() {
             this.audio.pause();
             this.status = 'pause';
+        },
+        // 让音乐跳转到某个时间点
+        playTo: function(time) {
+            this.audio.currentTime = time; // 单位秒
+        },
+        // 音乐播放完成事件
+        end: function(fn) {
+            this.audio.onended = fn;
         }
     }
     root.music = new AudioManage(); // 暴露音乐实例对象
